@@ -5,7 +5,7 @@
 ### Example
 
 ```
-  nextflow run main.nf --i input.vcf --indels spliceai_indels.vcf.gz --snvs spliceai_snvs.vcf.gz --fa fasta_ref.fa --t n --o /results
+  nextflow run main.nf --i input.vcf --indels spliceai_indels.vcf.gz --snvs spliceai_snvs.vcf.gz --fa fasta_ref.fa --sdb squirls_db --t n --o /results
 ```
 ### Execution parameters
 
@@ -14,6 +14,7 @@
 | `--i` | `file path/expression` | `Input VCF file path or expression` |
 | `--indels` | `file path` | `Precomputed SpliceAI indels scores` |
 | `--snvs` | `file path` | `Precomputed SpliceAI snvs scores` |
+| `--sdb` | `folder path` | `SQUIRLS database folder` |
 | `--fa` | `file path` | `FASTA reference file` |
 | `--t` | `integer` | `CPU threads to use in each SpliceAI task` |
 | `--o` | `folder path` | `Output folder path` |
@@ -28,7 +29,7 @@ Expressions can be utilized as described in the [Nextflow documentation](https:/
 Predictions are annotated on the the VCF file info field with the general format:
 
 ```
-SpliceAI=X|X|X|X;SQUIRLS_SCORE=X
+SQUIRLS_SCORE=X;SpliceAI=X|X|X|X
 ```
 
 ## References

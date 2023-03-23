@@ -4,7 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     SQUIRLS subworkflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Implements the usage of SQUIRLS as a VCF annotator
+    Implements the usage of SQUIRLS v2.0.0 as a VCF annotator
 ----------------------------------------------------------------------------------------
 */
 
@@ -19,7 +19,6 @@ process squirls_predict_variant_effect {
 
     input:
         each input_vcf
-        path squirls_cli
         path squirls_db
 
     output:
@@ -27,7 +26,7 @@ process squirls_predict_variant_effect {
 
     script:
         """
-        java -jar ${squirls_cli} annotate-vcf -f vcf -d ${squirls_db} ${input_vcf} .
+        java -jar /squirls-cli-2.0.0.jar annotate-vcf -f vcf -d ${squirls_db} ${input_vcf} .
         mv squirls.vcf splicing_${input_vcf.baseName}
         """
 

@@ -82,9 +82,9 @@ process spliceai_fuse_temporary_vcfs {
   script:
     """
     bcftools view ${vcf1} -Oz -o ${vcf1}.gz
-    bcftools index -f -t file1.vcf.gz
+    bcftools index -f -t ${vcf1}.gz
     bcftools view ${vcf2} -Oz -o ${vcf2}.gz
-    bcftools index -f -t file2.vcf.gz
+    bcftools index -f -t ${vcf2}.gz
     bcftools concat -a -O z -o ${basename}.gz ${vcf1}.gz ${vcf2}.gz
     """
 

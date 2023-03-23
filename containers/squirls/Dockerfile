@@ -8,8 +8,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN  apt-get update \
 	&& apt-get upgrade -y \
 	&& apt-get install -y default-jdk \
-	&& apt-get install -y git-all
+	&& apt-get install -y unzip \
+	&& apt-get install -y wget
 
-RUN git clone https://github.com/TheJacksonLaboratory/Squirls \
-	&& cd Squirls \
-	&& ./mvnw package
+# Download SQUIRLS v2.0.0 release
+RUN wget https://github.com/TheJacksonLaboratory/Squirls/releases/download/v2.0.0/squirls-cli-2.0.0-distribution.zip \
+	&& unzip squirls-cli-2.0.0-distribution.zip

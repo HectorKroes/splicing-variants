@@ -37,11 +37,8 @@ snv_annotation_index = Channel
 fasta_ref = Channel
     .fromPath(params.fa, checkIfExists: true)
 
-squirls_cli = Channel
-    .fromPath("scores/squirls-cli-2.0.0.jar")
-
 squirls_db = Channel
-    .fromPath("scores/2203_hg38/", checkIfExists: true)
+    .fromPath(params.sdb, checkIfExists: true)
 
 results_folder = Channel
     .fromPath(params.o)
@@ -52,14 +49,14 @@ workflow {
 
     input = format_input_files(input_vcfs)
 
-    pcs_channel = spliceai_annotate_precalculated_scores(format_input_files.out, indel_annotation, indel_annotation_index, snv_annotation, snv_annotation_index)
+    /*pcs_channel = spliceai_annotate_precalculated_scores(format_input_files.out, indel_annotation, indel_annotation_index, snv_annotation, snv_annotation_index)
 
     spliceai_predict_de_novo_variants(pcs_channel.tbc_ch.combine(fasta_ref))
 
     temporary_vcfs = (pcs_channel.pcs_ch).join(spliceai_predict_de_novo_variants.out)
 
-    spliceai_results = spliceai_fuse_temporary_vcfs(temporary_vcfs)
+    spliceai_results = spliceai_fuse_temporary_vcfs(temporary_vcfs)*/
 
-    squirls_predict_variant_effect(spliceai_results, squirls_cli, squirls_db)
+    squirls_predict_variant_effect(input, squirls_db)
 
 }
