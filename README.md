@@ -5,7 +5,7 @@
 ### Example
 
 ```
-  nextflow run main.nf --i input.vcf --indels spliceai_indels.vcf.gz --snvs spliceai_snvs.vcf.gz --fa fasta_ref.fa --gtf gtf_ref.gtf --o /results
+  nextflow run main.nf --i input.vcf --indels spliceai_indels.vcf.gz --snvs spliceai_snvs.vcf.gz --fa fasta_ref.fa --t n --o /results
 ```
 ### Execution parameters
 
@@ -15,8 +15,9 @@
 | `--indels` | `file path` | `Precomputed SpliceAI indels scores` |
 | `--snvs` | `file path` | `Precomputed SpliceAI snvs scores` |
 | `--fa` | `file path` | `FASTA reference file` |
-| `--o` | `folder path` | `Output folder path` |
 | `--t` | `integer` | `CPU threads to use in each SpliceAI task` |
+| `--o` | `folder path` | `Output folder path` |
+
 
 ### Input expressions
 
@@ -29,3 +30,9 @@ Predictions are annotated on the the VCF file info field with the general format
 ```
 SpliceAI=X|X|X|X;SQUIRLS_SCORE=X
 ```
+
+## References
+
+Jaganathan K, Kyriazopoulou Panagiotopoulou S, McRae JF, et al. Predicting Splicing from Primary Sequence with Deep Learning. Cell. 2019;176(3):535-548.e24. doi:10.1016/j.cell.2018.12.015
+
+Danis D, Jacobsen JOB, Carmody LC, et al. Interpretable prioritization of splice variants in diagnostic next-generation sequencing [published correction appears in Am J Hum Genet. 2021 Nov 4;108(11):2205]. Am J Hum Genet. 2021;108(9):1564-1577. doi:10.1016/j.ajhg.2021.06.014

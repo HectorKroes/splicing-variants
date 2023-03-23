@@ -1,0 +1,7 @@
+.nextflow/
+results/
+samples/
+scores/
+test/
+work/
+*.log
