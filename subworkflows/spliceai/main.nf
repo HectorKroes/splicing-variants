@@ -52,7 +52,7 @@ process spliceai_predict_de_novo_variants {
   novo predictions. */
   
   tag "${basename}"
-  cpus params.cpus
+  cpus params.t
   
   input:
     tuple val(basename), path(to_be_computed_vcf), path(ref_fasta)

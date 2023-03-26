@@ -33,3 +33,21 @@ process format_input_files {
     fi
     """
 }
+
+process filter_relevant_variants {
+    
+    publishDir params.o
+
+    input:
+        each input_vcf
+        path python_file
+
+    output:
+        path "relevant_**.vcf"
+
+    script:
+    """
+    python relevancy_filter.py ${input_vcf} ${params.spliceai_cutoff} ${params.squirls_cutoff}
+    """
+
+}

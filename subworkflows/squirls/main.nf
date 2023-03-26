@@ -22,12 +22,12 @@ process squirls_predict_variant_effect {
         path squirls_db
 
     output:
-        path "splicing_${input_vcf.baseName}"
+        path "all_splicing_${input_vcf.baseName}"
 
     script:
         """
         java -jar /squirls-cli-2.0.0.jar annotate-vcf -f vcf -d ${squirls_db} ${input_vcf} .
-        mv squirls.vcf splicing_${input_vcf.baseName}
+        mv squirls.vcf all_splicing_${input_vcf.baseName}
         """
 
 }
