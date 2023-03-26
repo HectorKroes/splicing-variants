@@ -37,7 +37,7 @@ process format_input_files {
 
 process filter_relevant_variants {
     
-    publishDir params.o
+    publishDir params.o, mode: 'copy'
     label 'inParallel'
 
     input:

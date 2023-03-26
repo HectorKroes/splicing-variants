@@ -14,8 +14,8 @@ process squirls_predict_variant_effect {
     annotates all the variants for which there are available
     scores and then saves them to the designated output folder*/
 
+    publishDir params.o, mode: 'copy'
     tag "${input_vcf.baseName}"
-    publishDir params.o
     label 'inSeries'
 
     input:
