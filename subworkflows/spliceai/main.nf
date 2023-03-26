@@ -19,6 +19,7 @@ process spliceai_annotate_precalculated_scores {
   predictions by SpliceAI) */
   
   tag "${input_vcf.baseName}"
+  label 'inParallel'
 
   input:
     each input_vcf
@@ -53,6 +54,7 @@ process spliceai_predict_de_novo_variants {
   
   tag "${basename}"
   cpus params.t
+  label 'inSeries'
   
   input:
     tuple val(basename), path(to_be_computed_vcf), path(ref_fasta)
@@ -62,7 +64,7 @@ process spliceai_predict_de_novo_variants {
 
   script:
     """
-    spliceai -I tbc_${basename} -O dnv_${basename} -R ${ref_fasta} -A grch38
+    spliceai -I tbc_${basename} -O dnv_${basename} -R ${ref_fasta} -A grch38 -D {params.spliceai_max_length}
     """
 }
 
@@ -72,6 +74,7 @@ process spliceai_fuse_temporary_vcfs {
   them to create a result file with all variants */
 
   tag "${basename}"
+  label 'inParallel'
   
   input:
     tuple val(basename), path(vcf1), path(vcf2)

@@ -16,6 +16,7 @@ process squirls_predict_variant_effect {
 
     tag "${input_vcf.baseName}"
     publishDir params.o
+    label 'inSeries'
 
     input:
         each input_vcf
@@ -26,7 +27,7 @@ process squirls_predict_variant_effect {
 
     script:
         """
-        java -jar /squirls-cli-2.0.0.jar annotate-vcf -f vcf -d ${squirls_db} ${input_vcf} .
+        java -jar /squirls-cli-2.0.0.jar annotate-vcf --threads ${params.t} -f vcf -d ${squirls_db} ${input_vcf} .
         mv squirls.vcf all_splicing_${input_vcf.baseName}
         """
 

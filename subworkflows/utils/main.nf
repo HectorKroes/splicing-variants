@@ -14,6 +14,7 @@ process format_input_files {
     in a standardized format */ 
     
     stageInMode 'copy'
+    label 'inParallel'
 
     input:
         path input_vcf
@@ -37,6 +38,7 @@ process format_input_files {
 process filter_relevant_variants {
     
     publishDir params.o
+    label 'inParallel'
 
     input:
         each input_vcf
