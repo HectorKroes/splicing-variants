@@ -12,10 +12,16 @@ def verify_annotation_presence(line):
 	spliceai = line.find("SpliceAI=")
 	return squirls, spliceai
 
+def score_formatter(score):
+	if score == '.':
+		return 0.0
+	else:
+		return float(score)
+
 def verify_relevance(line, index, spliceai_cutoff, squirls_cutoff):
 	annotations = line[index:].split('\t')[0].split('=')
-	squirls_score = float(annotations[1].split(';')[0])
-	max_spliceai_score = max([float(i) for i in annotations[2].split('|')[2:6]])
+	squirls_score = score_formatter(annotations[1].split(';')[0])
+	max_spliceai_score = max([score_formatter(i) for i in annotations[2].split('|')[2:6]])
 	if squirls_score >= squirls_cutoff and max_spliceai_score >= spliceai_cutoff:
 		return True
 	else: 

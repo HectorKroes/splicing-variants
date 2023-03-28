@@ -64,7 +64,7 @@ process spliceai_predict_de_novo_variants {
 
   script:
     """
-    spliceai -I tbc_${basename} -O dnv_${basename} -R ${ref_fasta} -A grch38 -D {params.spliceai_max_length}
+    spliceai -I tbc_${basename} -O dnv_${basename} -R ${ref_fasta} -A grch38 -D ${params.spliceai_max_length}
     """
 }
 
