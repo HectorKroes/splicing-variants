@@ -47,8 +47,33 @@ Some tasks in the pipeline allow for the usage of multithreading, and the amount
 Predictions are annotated on the the VCF file info field with the general format:
 
 ```
-SQUIRLS_SCORE=X;SpliceAI=X|X|X|X
+SQUIRLS_SCORE=SCORE;SpliceAI=ALLELE|SYMBOL|DS_AG|DS_AL|DS_DG|DS_DL|DP_AG|DP_AL|DP_DG|DP_DL;SplicePrediction=PREDICTION
 ```
+
+### SQUIRLS
+
+SQUIRLS provides a single score that is the maximum predicted splicing pathogenicity score among the ones calculated for each variant. More information can be found at the [SQUIRLS documentation](https://squirls.readthedocs.io/en/master/interpretation.html)
+
+### SpliceAI
+
+SpliceAI provides a series of scores and information separated by `|`, in the order presented in the table below. More information can be found at the [SpliceAI Github repository](https://github.com/Illumina/SpliceAI)
+
+| Field   | Description       |
+| :---------- | :--------- |
+| `ALLELE` | `Alternate allele` |
+| `SYMBOL` |  `Gene symbol` |
+| `DS_AG` | `Delta score (acceptor gain)` |
+| `DS_AL` | `Delta score (acceptor loss)` |
+| `DS_DG` | `Delta score (donor gain)` |
+| `DS_DL` | `Delta score (donor loss)` |
+| `DP_AG` | `Delta position (acceptor gain)` |
+| `DP_AL` | `Delta position (acceptor loss)` |
+| `DP_DG` | `Delta position (donor gain)` |
+| `DP_DL` | `Delta position (donor loss)` |
+
+### Prediction
+
+The `SplicePrediction` is the final annotation of the pipeline for each variant according to the cutoffs and annotation mode utilized. It indicates `P` for a pathogenic prediction and `N` for a non-pathogenic prediction.
 
 ## References
 

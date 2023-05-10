@@ -65,6 +65,6 @@ process filter_relevant_variants {
 
     script:
     """
-    python relevancy_filter.py ${input_vcf} ${params.spliceai_cutoff} ${params.squirls_cutoff}
+    python relevancy_filter.py ${input_vcf} ${params.spliceai_cutoff} ${params.squirls_cutoff} ${params.annotation_mode}
     """
 }
