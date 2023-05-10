@@ -18,21 +18,29 @@
 | `--sdb` | `folder path` | `SQUIRLS database folder` |
 | `--fa` | `file path` | `FASTA reference file` |
 | `--ref` | `string` | `Gene annotation file (either 'grch37', 'grch38' or a custom file)` |
-| `--t` | `integer` | `CPU threads to use in each SpliceAI task` |
+| `--t` | `integer` | `CPU threads to use in multithreading-compatible tasks` |
 | `--o` | `folder path` | `Output folder path` |
 
 
-### Precalculated scores
+### SQUIRLS database folder
 
-Illumina made available annotations for all possible substitutions, 1 base insertions, and 1-4 base deletions within genes for download at their [online platform](https://basespace.illumina.com/s/otSPW8hnhaZR). These annotations are free for academic and not-for-profit use; other use requires a commercial license from Illumina, Inc. To use them in our pipeline, you should execute it with pcv=1 and use parameters 'indels' and 'snvs' to indicate the score file paths.
+SQUIRLS's database can be downloaded from it's [documentation page](https://squirls.readthedocs.io/en/master/setup.html#squirls-downloadable-resources). Make sure to download the adequate files according to the genome build being used.
+
+### Illumina's SpliceAI precalculated scores
+
+Illumina made available annotations for all possible substitutions, 1 base insertions, and 1-4 base deletions within genes for download at their [online platform](https://basespace.illumina.com/s/otSPW8hnhaZR). These annotations are free for academic and not-for-profit use; other use requires a commercial license from Illumina, Inc. To use them in our pipeline, you should execute it with `pcv = 1` and use the parameters `indels` and `snvs` to indicate the score file paths.
 
 ### Input expressions
 
-Expressions can be utilized as described in the [Nextflow documentation](https://www.nextflow.io/docs/latest/process.html#multiple-input-files) to input multiple files at once. Expressions must be enclosed in quotes while individual file paths do not.
+To input multiple files at once, expressions can be utilized as described in the [Nextflow documentation](https://www.nextflow.io/docs/latest/process.html#multiple-input-files). Expressions must be enclosed in quotes while individual file paths do not.
 
 ### Custom gene annotation files
 
-According to SpliceAI instructions, it's possible to create custom gene annotation files using the files [here](https://github.com/Illumina/SpliceAI/tree/master/spliceai/annotations) as a template.
+It's possible to create custom gene annotation files using the files [here](https://github.com/Illumina/SpliceAI/tree/master/spliceai/annotations) as a template.
+
+### CPU threads
+
+Some tasks in the pipeline allow for the usage of multithreading, and the amount of CPU threads used for those will be determined by the `--t` parameter
 
 ## Results
 

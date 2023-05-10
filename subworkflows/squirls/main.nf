@@ -36,7 +36,7 @@ process predict_variant_effect {
 
 workflow squirls {
 
-  //subworkflow description
+  // SQUIRLS subworkflow
 
   take:
     spliceai_results
