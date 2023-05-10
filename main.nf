@@ -34,10 +34,13 @@ snv_annotation_index = Channel
     .fromPath(params.snvs + '.tbi')
 
 fasta_ref = Channel
-    .fromPath(params.fa, checkIfExists: true)
+    .fromPath(params.fa)
 
 squirls_db = Channel
-    .fromPath(params.sdb, checkIfExists: true)
+    .fromPath(params.sdb)
+
+chr_format = Channel
+    .fromPath('./internals/chr_dict.txt')
 
 relevancy_filter_script = Channel
     .fromPath('./scripts/relevancy_filter.py')
@@ -49,7 +52,7 @@ workflow {
 
     // Defining main workflow
 
-    input_files = format_input_files(input_vcfs)
+    input_files = format_input_files(input_vcfs, chr_format)
 
     spliceai_results = spliceai(input_files, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, fasta_ref)
 
