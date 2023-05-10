@@ -1,6 +1,6 @@
 .nextflow/
+internals/
 results/
 samples/
-scores/
 work/
 *.log

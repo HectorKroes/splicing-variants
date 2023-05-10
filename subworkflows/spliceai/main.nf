@@ -6,10 +6,11 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Implements the usage of SpliceAI v1.3.1 with the option 
     of using precalculated scores to cut processing time
+    and save computing resources
 ----------------------------------------------------------------------------------------
 */
 
-process spliceai_annotate_precalculated_scores {
+process annotate_precalculated_scores {
 
   /* Function receives input vcf, and precalculated scores,
   annotates all the variants for which there are available
@@ -19,10 +20,11 @@ process spliceai_annotate_precalculated_scores {
   predictions by SpliceAI) */
   
   tag "${input_vcf.baseName}"
+  label 'spliceaiContainer'
   label 'inParallel'
 
   input:
-    each input_vcf
+    tuple path(input_vcf), path(index_file)
     path indel_annotation
     path indel_annotation_index
     path snv_annotation
@@ -34,7 +36,6 @@ process spliceai_annotate_precalculated_scores {
 
   script:
     """
-    bcftools index -f -t ${input_vcf}
     bcftools annotate -c 'INFO' -a ${indel_annotation} ${input_vcf} -O z -o pcs1.vcf.gz
     bcftools index -f -t pcs1.vcf.gz
     bcftools annotate -c 'INFO' -a ${snv_annotation} pcs1.vcf.gz -O z -o pcs2.vcf.gz
@@ -44,7 +45,7 @@ process spliceai_annotate_precalculated_scores {
     """
 }
 
-process spliceai_predict_de_novo_variants {
+process predict_de_novo_variants {
 
   /* Function receives tuple containing the tbc file, 
   the equivalent file basename and a fasta reference
@@ -54,6 +55,7 @@ process spliceai_predict_de_novo_variants {
   
   tag "${basename}"
   cpus params.t
+  label 'spliceaiContainer'
   label 'inSeries'
   
   input:
@@ -64,16 +66,17 @@ process spliceai_predict_de_novo_variants {
 
   script:
     """
-    spliceai -I tbc_${basename} -O dnv_${basename} -R ${ref_fasta} -A grch38 -D ${params.spliceai_max_length}
+    spliceai -I ${to_be_computed_vcf} -O dnv_${basename} -R ${ref_fasta} -A grch38 -D ${params.spliceai_max_length}
     """
 }
 
-process spliceai_fuse_temporary_vcfs {
+process fuse_temporary_vcfs {
   
   /* Function get dnv and pcs vcf files and concatenates
   them to create a result file with all variants */
 
   tag "${basename}"
+  label 'spliceaiContainer'
   label 'inParallel'
   
   input:
@@ -91,4 +94,61 @@ process spliceai_fuse_temporary_vcfs {
     bcftools concat -a -O z -o ${basename}.gz ${vcf1}.gz ${vcf2}.gz
     """
 
+}
+
+process further_formatting {
+
+  label 'spliceaiContainer'
+  label 'inParallel'
+
+  input:
+    tuple path(input_vcf), path(index_file)
+
+  output:
+    tuple val("${input_vcf.baseName}"), path("tbc_${input_vcf.baseName}")
+
+  script:
+    """
+    gunzip -c ${input_vcf} > tbc_${input_vcf.baseName}
+    """
+
+}
+
+workflow spliceai {
+
+  //description
+
+  take:
+    input_files
+    snv_annotation
+    indel_annotation
+    snv_annotation_index
+    indel_annotation_index
+    fasta_ref
+ 
+  main: 
+
+    if( params.pcv == 0 ) {
+
+      tbc_channel = further_formatting(input_files)
+
+      spliceai_results = predict_de_novo_variants(tbc_channel.combine(fasta_ref))
+
+    }
+
+    else if( params.pcv == 1 ) {
+
+      pcs_channel = annotate_precalculated_scores(input_files, indel_annotation, indel_annotation_index, snv_annotation, snv_annotation_index)
+
+      predict_de_novo_variants(pcs_channel.tbc_ch.combine(fasta_ref))
+
+      temporary_vcfs = (pcs_channel.pcs_ch).join(predict_de_novo_variants.out)
+
+      spliceai_results = fuse_temporary_vcfs(temporary_vcfs)
+    
+    }
+
+  emit: 
+    spliceai_results
+  
 }

@@ -8,7 +8,7 @@
 ----------------------------------------------------------------------------------------
 */
 
-process squirls_predict_variant_effect {
+process predict_variant_effect {
     
     /* Function receives input vcf, and necessary squirls files,
     annotates all the variants for which there are available
@@ -16,6 +16,7 @@ process squirls_predict_variant_effect {
 
     publishDir params.o, mode: 'copy'
     tag "${input_vcf.baseName}"
+    label 'squirlsContainer'
     label 'inSeries'
 
     input:
@@ -30,5 +31,21 @@ process squirls_predict_variant_effect {
         java -jar /squirls-cli-2.0.0.jar annotate-vcf --threads ${params.t} -f vcf -d ${squirls_db} ${input_vcf} .
         mv squirls.vcf all_splicing_${input_vcf.baseName}
         """
+
+}
+
+workflow squirls {
+
+  //subworkflow description
+
+  take:
+    spliceai_results
+    squirls_db
+ 
+  main: 
+    squirls_results = predict_variant_effect(spliceai_results, squirls_db)
+
+  emit: 
+    squirls_results
 
 }

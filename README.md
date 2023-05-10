@@ -5,24 +5,34 @@
 ### Example
 
 ```
-  nextflow run main.nf --i input.vcf --indels spliceai_indels.vcf.gz --snvs spliceai_snvs.vcf.gz --fa fasta_ref.fa --sdb squirls_db --t n --o /results
+  nextflow run main.nf --i sample.vcf --pcv 1 --indels spliceai_scores.raw.indel.hg38.vcf.gz --snvs spliceai_scores.raw.snv.hg38.vcf.gz --sdb 2203_hg38 --ref grch38 --fa hg38.fa.gz --t 10 --o results/ -resume
 ```
 ### Execution parameters
 
 | Parameter   | Type       | Description                           |
 | :---------- | :--------- | :---------------------------------- |
 | `--i` | `file path/expression` | `Input VCF file path or expression` |
+| `--pcv` | `integer` | `1 if using precalculated scores, 0 if not` |
 | `--indels` | `file path` | `Precomputed SpliceAI indels scores` |
 | `--snvs` | `file path` | `Precomputed SpliceAI snvs scores` |
 | `--sdb` | `folder path` | `SQUIRLS database folder` |
 | `--fa` | `file path` | `FASTA reference file` |
+| `--ref` | `string` | `Gene annotation file (either 'grch37', 'grch38' or a custom file)` |
 | `--t` | `integer` | `CPU threads to use in each SpliceAI task` |
 | `--o` | `folder path` | `Output folder path` |
 
 
+### Precalculated scores
+
+Illumina made available annotations for all possible substitutions, 1 base insertions, and 1-4 base deletions within genes for download at their [online platform](https://basespace.illumina.com/s/otSPW8hnhaZR). These annotations are free for academic and not-for-profit use; other use requires a commercial license from Illumina, Inc. To use them in our pipeline, you should execute it with pcv=1 and use parameters 'indels' and 'snvs' to indicate the score file paths.
+
 ### Input expressions
 
-Expressions can be utilized as described in the [Nextflow documentation](https://www.nextflow.io/docs/latest/process.html#multiple-input-files) to input multiple files at once. Expressions must be enclosed in quotes.
+Expressions can be utilized as described in the [Nextflow documentation](https://www.nextflow.io/docs/latest/process.html#multiple-input-files) to input multiple files at once. Expressions must be enclosed in quotes while individual file paths do not.
+
+### Custom gene annotation files
+
+According to SpliceAI instructions, it's possible to create custom gene annotation files using the files [here](https://github.com/Illumina/SpliceAI/tree/master/spliceai/annotations) as a template.
 
 ## Results
 

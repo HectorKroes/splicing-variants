@@ -14,23 +14,25 @@ process format_input_files {
     in a standardized format */ 
     
     stageInMode 'copy'
+    label 'spliceaiContainer'
     label 'inParallel'
 
     input:
         path input_vcf
 
     output:
-        path("${input_vcf.SimpleName}.vcf.gz")
+        tuple path("${input_vcf.SimpleName}.vcf.gz"), path("${input_vcf.SimpleName}.vcf.gz.tbi")
 
     script:
     """
     if file -b --mime-type ${input_vcf} | grep -q x-gzip; then     
-        bcftools index -f -t ${input_vcf}
+        true
     elif file -b --mime-type ${input_vcf} | grep -q gzip; then
         gunzip ${input_vcf}
         bcftools view ${input_vcf} -Oz -o ${input_vcf}.gz
     else     
         bcftools view ${input_vcf} -Oz -o ${input_vcf}.gz
+    bcftools index -f -t ${input_vcf.SimpleName}.vcf.gz
     fi
     """
 }
@@ -38,6 +40,7 @@ process format_input_files {
 process filter_relevant_variants {
     
     publishDir params.o, mode: 'copy'
+    label 'spliceaiContainer'
     label 'inParallel'
 
     input:
@@ -51,5 +54,4 @@ process filter_relevant_variants {
     """
     python relevancy_filter.py ${input_vcf} ${params.spliceai_cutoff} ${params.squirls_cutoff}
     """
-
 }
