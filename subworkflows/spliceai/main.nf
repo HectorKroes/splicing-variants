@@ -72,7 +72,7 @@ process predict_de_novo_variants {
 
 process fuse_temporary_vcfs {
   
-  /* Function get dnv and pcs vcf files and concatenates
+  /* Function that gets dnv and pcs vcf files and concatenates
   them to create a result file with all variants */
 
   tag "${basename}"
@@ -98,6 +98,11 @@ process fuse_temporary_vcfs {
 
 process further_formatting {
 
+  /* Function that fits files that will not be annotated 
+  by precalculated scores into a tuple compatible with 
+  predict_de_novo_variants function input format */ 
+
+
   label 'spliceaiContainer'
   label 'inParallel'
 
@@ -116,7 +121,8 @@ process further_formatting {
 
 workflow spliceai {
 
-  //description
+  /* SpliceAI subworkflow - pcv parameter check determines 
+  whether to use precalculated scores or not */
 
   take:
     input_files
