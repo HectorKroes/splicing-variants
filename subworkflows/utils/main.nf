@@ -11,7 +11,8 @@
 process format_input_files {
 
     /* Function to ensure input vcf file enters workflow
-    in a standardized format */ 
+    in a standardized format: in bgzip compression, and
+    with chr formatting compatible with Illumina files */ 
     
     stageInMode 'copy'
     label 'spliceaiContainer'
@@ -25,6 +26,7 @@ process format_input_files {
 
     script:
     """
+    bcftools annotate --rename-chrs  ${input_vcf} -o ${input_vcf}
     if file -b --mime-type ${input_vcf} | grep -q x-gzip; then     
         true
     elif file -b --mime-type ${input_vcf} | grep -q gzip; then
@@ -38,6 +40,9 @@ process format_input_files {
 }
 
 process filter_relevant_variants {
+
+    /* Uses python script to annotate final pipeline
+    results into vcf files */
     
     publishDir params.o, mode: 'copy'
     label 'spliceaiContainer'

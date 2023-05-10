@@ -51,7 +51,8 @@ process predict_de_novo_variants {
   the equivalent file basename and a fasta reference
   for running SpliceAI, outputting the results as a tuple
   of the file basename and a dnv file containing the de 
-  novo predictions. */
+  novo predictions. The function also ensures that the fasta
+  file has compatible chr formats with the files presented. */
   
   tag "${basename}"
   cpus params.t
@@ -66,6 +67,7 @@ process predict_de_novo_variants {
 
   script:
     """
+    zcat ${ref_fasta} | sed 's/>chr/>/g' | gzip > ${ref_fasta}
     spliceai -I ${to_be_computed_vcf} -O dnv_${basename} -R ${ref_fasta} -A grch38 -D ${params.spliceai_max_length}
     """
 }
