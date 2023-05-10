@@ -43,7 +43,7 @@ chr_format = Channel
     .fromPath('./internals/chr_dict.txt')
 
 relevancy_filter_script = Channel
-    .fromPath('./scripts/relevancy_filter.py')
+    .fromPath('./scripts/vcf_annotation.py')
 
 results_folder = Channel
     .fromPath(params.o)
