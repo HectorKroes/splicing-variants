@@ -20,13 +20,20 @@ process format_input_files {
 
     input:
         path input_vcf
+        path chr_format
 
     output:
         tuple path("${input_vcf.SimpleName}.vcf.gz"), path("${input_vcf.SimpleName}.vcf.gz.tbi")
 
     script:
     """
-    bcftools annotate --rename-chrs  ${input_vcf} -o ${input_vcf}
+
+    if file -b --mime-type ${input_vcf} | grep -q "gzip"; then
+        zcat ${input_vcf} | grep -q ">chr" && zcat ${input_vcf} | bcftools annotate --rename-chrs ${chr_format} -o ${input_vcf}
+    else
+        grep -q ">chr" ${input_vcf} && bcftools annotate --rename-chrs ${chr_format} ${input_vcf} -o ${input_vcf}
+    fi
+
     if file -b --mime-type ${input_vcf} | grep -q x-gzip; then     
         true
     elif file -b --mime-type ${input_vcf} | grep -q gzip; then
@@ -34,8 +41,9 @@ process format_input_files {
         bcftools view ${input_vcf} -Oz -o ${input_vcf}.gz
     else     
         bcftools view ${input_vcf} -Oz -o ${input_vcf}.gz
-    bcftools index -f -t ${input_vcf.SimpleName}.vcf.gz
     fi
+
+    bcftools index -f -t ${input_vcf.SimpleName}.vcf.gz
     """
 }
 
