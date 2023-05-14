@@ -11,10 +11,10 @@
 
 // Including processes from subworkflows
 
-include { format_input_files } from './subworkflows/utils'
-include { filter_relevant_variants } from './subworkflows/utils'
+include { preanalysis } from './subworkflows/utils'
 include { spliceai } from './subworkflows/spliceai'
 include { squirls } from './subworkflows/squirls'
+include { postanalysis } from './subworkflows/utils'
 
 // Defining input parameters
 
@@ -33,7 +33,7 @@ snv_annotation = Channel
 snv_annotation_index = Channel
     .fromPath(params.snvs + '.tbi')
 
-fasta_ref = Channel
+fasta_file = Channel
     .fromPath(params.fa)
 
 squirls_db = Channel
@@ -42,7 +42,7 @@ squirls_db = Channel
 chr_format = Channel
     .fromPath('./internals/chr_dict.txt')
 
-relevancy_filter_script = Channel
+annotation_script = Channel
     .fromPath('./scripts/vcf_annotation.py')
 
 results_folder = Channel
@@ -52,12 +52,12 @@ workflow {
 
     // Defining main workflow
 
-    input_files = format_input_files(input_vcfs, chr_format)
+    formatted_data = preanalysis(input_vcfs, chr_format, fasta_file)
 
-    spliceai_results = spliceai(input_files, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, fasta_ref)
+    spliceai_results = spliceai(formatted_data.input_files, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, formatted_data.fasta_ref)
 
     squirls_results = squirls(spliceai.out, squirls_db)
 
-    annotation = filter_relevant_variants(squirls_results, relevancy_filter_script)
+    postanalysis(squirls_results, annotation_script)
 
 }

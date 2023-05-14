@@ -28,26 +28,46 @@ process format_input_files {
     script:
     """
 
-    if file -b --mime-type ${input_vcf} | grep -q "gzip"; then
-        zcat ${input_vcf} | grep -q ">chr" && zcat ${input_vcf} | bcftools annotate --rename-chrs ${chr_format} -o ${input_vcf}
-    else
-        grep -q ">chr" ${input_vcf} && bcftools annotate --rename-chrs ${chr_format} ${input_vcf} -o ${input_vcf}
-    fi
-
     if file -b --mime-type ${input_vcf} | grep -q x-gzip; then     
-        true
+        zcat ${input_vcf} | grep -q "chr" && zcat ${input_vcf} | bcftools annotate --rename-chrs ${chr_format} -Oz -o ${input_vcf}
     elif file -b --mime-type ${input_vcf} | grep -q gzip; then
-        gunzip ${input_vcf}
-        bcftools view ${input_vcf} -Oz -o ${input_vcf}.gz
-    else     
-        bcftools view ${input_vcf} -Oz -o ${input_vcf}.gz
+        zcat ${input_vcf} | grep -q "chr" && zcat ${input_vcf} | bcftools annotate --rename-chrs ${chr_format} -Oz -o ${input_vcf}
+    else
+        grep -q "chr" ${input_vcf} && bcftools annotate --rename-chrs ${chr_format} ${input_vcf} -Oz -o ${input_vcf}.gz
     fi
 
     bcftools index -f -t ${input_vcf.SimpleName}.vcf.gz
     """
 }
 
-process filter_relevant_variants {
+process format_reference_files {
+
+    /* Function to standardize reference files and provide
+    a single copy of them to be used whenever necessary */ 
+    
+    stageInMode 'copy'
+    stageOutMode 'copy'
+    label 'spliceaiContainer'
+    label 'inParallel'
+
+    input:
+        path fasta_file
+
+    output:
+        path("${fasta_file.SimpleName}.fa")
+
+    script:
+    """
+    if file -b --mime-type ${fasta_file} | grep -q gzip; then
+        zcat ${fasta_file} | sed 's/>chr/>/g' > ${fasta_file.baseName}
+    else
+        sed -i 's/>chr/>/g' ${fasta_file} > ${fasta_file}
+    fi
+    """
+
+}
+
+process annotate_variants {
 
     /* Uses python script to annotate final pipeline
     results into vcf files */
@@ -65,6 +85,38 @@ process filter_relevant_variants {
 
     script:
     """
-    python relevancy_filter.py ${input_vcf} ${params.spliceai_cutoff} ${params.squirls_cutoff} ${params.annotation_mode}
+    python ${python_file} ${input_vcf} ${params.spliceai_cutoff} ${params.squirls_cutoff} ${params.annotation_mode}
     """
+}
+
+workflow preanalysis {
+
+  // Pre-analysis subworkflow
+
+  take:
+    input_vcfs
+    chr_format
+    fasta_file
+ 
+  main: 
+    input_files = format_input_files(input_vcfs, chr_format)
+    fasta_ref = format_reference_files(fasta_file)
+
+  emit: 
+    input_files
+    fasta_ref
+
+}
+
+workflow postanalysis {
+
+    // Post-analysis subworkflow
+
+  take:
+    results
+    annotation_script
+
+  main:
+    annotate_variants(results, annotation_script)
+    
 }

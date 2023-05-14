@@ -59,7 +59,7 @@ if __name__ == "__main__":
     spliceai_cutoff = float(sys.argv[2])
     squirls_cutoff = float(sys.argv[3])
     mode = str(sys.argv[4]).upper()
-    results_file = f"relevant_{''.join(file_path.split('_', 1)[1])}"
+    results_file = f"splice_{''.join(file_path.split('_', 1)[1])}"
     with open(file_path) as file:
     	lines = file.readlines()
     start = find_start(lines)

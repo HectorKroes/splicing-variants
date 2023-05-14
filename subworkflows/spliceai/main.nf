@@ -55,7 +55,7 @@ process predict_de_novo_variants {
   file has compatible chr formats with the files presented. */
   
   tag "${basename}"
-  cpus params.t
+  stageInMode 'copy'
   label 'spliceaiContainer'
   label 'inSeries'
   
@@ -67,8 +67,7 @@ process predict_de_novo_variants {
 
   script:
     """
-    zcat ${ref_fasta} | sed 's/>chr/>/g' | gzip > ${ref_fasta}
-    spliceai -I ${to_be_computed_vcf} -O dnv_${basename} -R ${ref_fasta} -A grch38 -D ${params.spliceai_max_length}
+    spliceai -I tbc_${basename} -O dnv_${basename} -R ${ref_fasta} -A ${params.ref} -D ${params.spliceai_max_length}
     """
 }
 
@@ -98,7 +97,7 @@ process fuse_temporary_vcfs {
 
 }
 
-process further_formatting {
+process no_pcv_adequation {
 
   /* Function that fits files that will not be annotated 
   by precalculated scores into a tuple compatible with 
@@ -138,7 +137,7 @@ workflow spliceai {
 
     if( params.pcv == 0 ) {
 
-      tbc_channel = further_formatting(input_files)
+      tbc_channel = no_pcv_adequation(input_files)
 
       spliceai_results = predict_de_novo_variants(tbc_channel.combine(fasta_ref))
 
