@@ -14,7 +14,6 @@ process predict_variant_effect {
     annotates all the variants for which there are available
     scores and then saves them to the designated output folder*/
 
-    publishDir params.o, mode: 'copy'
     tag "${input_vcf.baseName}"
     label 'squirlsContainer'
     label 'inSeries'
@@ -24,12 +23,12 @@ process predict_variant_effect {
         path squirls_db
 
     output:
-        path "all_splicing_${input_vcf.baseName}"
+        path "${input_vcf.baseName}"
 
     script:
         """
         java -jar /squirls-cli-2.0.0.jar annotate-vcf --threads ${params.t} -f vcf -d ${squirls_db} ${input_vcf} .
-        mv squirls.vcf all_splicing_${input_vcf.baseName}
+        mv squirls.vcf ${input_vcf.baseName}
         """
 
 }

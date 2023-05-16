@@ -32,8 +32,10 @@ process format_input_files {
         zcat ${input_vcf} | grep -q "chr" && zcat ${input_vcf} | bcftools annotate --rename-chrs ${chr_format} -Oz -o ${input_vcf}
     elif file -b --mime-type ${input_vcf} | grep -q gzip; then
         zcat ${input_vcf} | grep -q "chr" && zcat ${input_vcf} | bcftools annotate --rename-chrs ${chr_format} -Oz -o ${input_vcf}
+    elif grep -q "chr" ${input_vcf}; then
+        bcftools annotate --rename-chrs ${chr_format} ${input_vcf} -Oz -o ${input_vcf}.gz
     else
-        grep -q "chr" ${input_vcf} && bcftools annotate --rename-chrs ${chr_format} ${input_vcf} -Oz -o ${input_vcf}.gz
+        bcftools view ${input_vcf} -Oz -o ${input_vcf}.gz
     fi
 
     bcftools index -f -t ${input_vcf.SimpleName}.vcf.gz
@@ -46,7 +48,6 @@ process format_reference_files {
     a single copy of them to be used whenever necessary */ 
     
     stageInMode 'copy'
-    stageOutMode 'copy'
     label 'spliceaiContainer'
     label 'inParallel'
 
@@ -81,7 +82,7 @@ process annotate_variants {
         path python_file
 
     output:
-        path "relevant_**.vcf"
+        path "splice_**.vcf"
 
     script:
     """
