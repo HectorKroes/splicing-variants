@@ -11,10 +11,11 @@
 
 // Including processes from subworkflows
 
-include { preanalysis } from './subworkflows/utils'
-include { spliceai } from './subworkflows/spliceai'
+include { preanalysis } from './subworkflows/preanalysis'
+include { spliceai_cpu } from './subworkflows/spliceai-cpu'
+include { spliceai_gpu } from './subworkflows/spliceai-gpu'
 include { squirls } from './subworkflows/squirls'
-include { postanalysis } from './subworkflows/utils'
+include { postanalysis } from './subworkflows/postanalysis'
 
 // Defining input parameters
 
@@ -40,10 +41,7 @@ squirls_db = Channel
     .fromPath(params.sdb)
 
 chr_format = Channel
-    .fromPath('./internals/chr_dict.txt')
-
-annotation_script = Channel
-    .fromPath('./scripts/vcf_annotation.py')
+    .fromPath('./resources/usr/src/chr_dict.txt')
 
 results_folder = Channel
     .fromPath(params.o)
@@ -54,9 +52,17 @@ workflow {
 
     formatted_data = preanalysis(input_vcfs, chr_format, fasta_file)
 
-    spliceai_results = spliceai(formatted_data.input_files, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, formatted_data.fasta_ref)
+    if ( params.gpu ) {
 
-    squirls_results = squirls(spliceai.out, squirls_db)
+        spliceai_results = spliceai_gpu(formatted_data.vcf_files, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, formatted_data.fasta_ref)
+
+    } else {
+
+        spliceai_results = spliceai_cpu(formatted_data.vcf_files, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, formatted_data.fasta_ref)
+
+    }
+
+    squirls_results = squirls(spliceai_results, squirls_db)
 
     postanalysis(squirls_results, annotation_script)
 

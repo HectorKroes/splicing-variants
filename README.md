@@ -5,14 +5,15 @@
 ### Example
 
 ```
-  nextflow run main.nf --i sample.vcf --pcv 1 --indels spliceai_scores.raw.indel.hg38.vcf.gz --snvs spliceai_scores.raw.snv.hg38.vcf.gz --sdb 2203_hg38 --ref grch38 --fa hg38.fa.gz --t 10 --o results/ -resume
+  nextflow run main.nf --i sample.vcf --pcv --gpu --indels spliceai_scores.raw.indel.hg38.vcf.gz --snvs spliceai_scores.raw.snv.hg38.vcf.gz --sdb 2203_hg38 --ref grch38 --fa hg38.fa.gz --t 10 --o results/ -resume
 ```
 ### Execution parameters
 
 | Parameter   | Type       | Description                           |
 | :---------- | :--------- | :---------------------------------- |
 | `--i` | `file path/expression` | `Input VCF file path or expression` |
-| `--pcv` | `integer` | `1 if using precalculated scores, 0 if not` |
+| `--pcv` | `standalone parameter` | `Enables usage of precalculated scores` |
+| `--gpu` | `standalone parameter` | `Enables SpliceAI GPU annotation` |
 | `--indels` | `file path` | `Precomputed SpliceAI indels scores` |
 | `--snvs` | `file path` | `Precomputed SpliceAI snvs scores` |
 | `--sdb` | `folder path` | `SQUIRLS database folder` |
@@ -21,14 +22,13 @@
 | `--t` | `integer` | `CPU threads to use in multithreading-compatible tasks` |
 | `--o` | `folder path` | `Output folder path` |
 
-
 ### SQUIRLS database folder
 
 SQUIRLS's database can be downloaded from it's [documentation page](https://squirls.readthedocs.io/en/master/setup.html#squirls-downloadable-resources). Make sure to download the adequate files according to the genome build being used.
 
 ### Illumina's SpliceAI precalculated scores
 
-Illumina made available annotations for all possible substitutions, 1 base insertions, and 1-4 base deletions within genes for download at their [online platform](https://basespace.illumina.com/s/otSPW8hnhaZR). These annotations are free for academic and not-for-profit use; other use requires a commercial license from Illumina, Inc. To use them in our pipeline, you should execute it with `pcv = 1` and use the parameters `indels` and `snvs` to indicate the score file paths.
+Illumina made available annotations for all possible substitutions, 1 base insertions, and 1-4 base deletions within genes for download at their [online platform](https://basespace.illumina.com/s/otSPW8hnhaZR). These annotations are free for academic and not-for-profit use; other use requires a commercial license from Illumina, Inc. To use them in our pipeline, you should execute it with the `--pcv` parameter and use the parameters `indels` and `snvs` to indicate the score file paths.
 
 ### Input expressions
 

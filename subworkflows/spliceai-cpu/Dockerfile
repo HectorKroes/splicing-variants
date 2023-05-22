@@ -5,8 +5,7 @@ RUN apt-get update && apt-get install -y \
   libbz2-dev \
   liblzma-dev \
   zlib1g-dev \
-  bcftools \
-  tabix
+  bcftools
 
 ENV SPLICE_AI_VERSION=1.3.1
 RUN pip3 install spliceai==${SPLICE_AI_VERSION}

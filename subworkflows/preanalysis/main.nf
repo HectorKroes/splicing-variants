@@ -2,20 +2,20 @@
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Utils subworkflow
+    Preanalysis subworkflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Implements common utilities functions for the main workflow
+    Implements functions required in the pre-analysis phase of the
+    general pipeline, mostly formatting-related
 ----------------------------------------------------------------------------------------
 */
 
-process format_input_files {
+process format_vcf_files {
 
     /* Function to ensure input vcf file enters workflow
     in a standardized format: in bgzip compression, and
     with chr formatting compatible with Illumina files */ 
     
     stageInMode 'copy'
-    label 'spliceaiContainer'
     label 'inParallel'
 
     input:
@@ -23,11 +23,10 @@ process format_input_files {
         path chr_format
 
     output:
-        tuple path("${input_vcf.SimpleName}.vcf.gz"), path("${input_vcf.SimpleName}.vcf.gz.tbi")
+        path("${input_vcf.SimpleName}.vcf.gz")
 
     script:
     """
-
     if file -b --mime-type ${input_vcf} | grep -q x-gzip; then     
         zcat ${input_vcf} | grep -q "chr" && zcat ${input_vcf} | bcftools annotate --rename-chrs ${chr_format} -Oz -o ${input_vcf}
     elif file -b --mime-type ${input_vcf} | grep -q gzip; then
@@ -37,8 +36,6 @@ process format_input_files {
     else
         bcftools view ${input_vcf} -Oz -o ${input_vcf}.gz
     fi
-
-    bcftools index -f -t ${input_vcf.SimpleName}.vcf.gz
     """
 }
 
@@ -48,7 +45,6 @@ process format_reference_files {
     a single copy of them to be used whenever necessary */ 
     
     stageInMode 'copy'
-    label 'spliceaiContainer'
     label 'inParallel'
 
     input:
@@ -68,27 +64,26 @@ process format_reference_files {
 
 }
 
-process annotate_variants {
+process normalize_files {
 
-    /* Uses python script to annotate final pipeline
-    results into vcf files */
+    /* Function to normalize and index vcfs using bcftools */ 
     
-    publishDir params.o, mode: 'copy'
-    label 'spliceaiContainer'
-    label 'inParallel'
-
     input:
-        each input_vcf
-        path python_file
+        each vcf_file
+        path fasta_file
 
     output:
-        path "splice_**.vcf"
+        tuple path("${vcf_file.SimpleName}.vcf.gz"), path("${vcf_file.SimpleName}.vcf.gz.tbi")
 
     script:
     """
-    python ${python_file} ${input_vcf} ${params.spliceai_cutoff} ${params.squirls_cutoff} ${params.annotation_mode}
+    bcftools norm -cs -f ${fasta_file} ${vcf_file} -Oz -o normalized_vcf.vcf.gz
+    mv normalized_vcf.vcf.gz ${vcf_file.SimpleName}.vcf.gz
+    bcftools index -f -t ${vcf_file.SimpleName}.vcf.gz
     """
+
 }
+
 
 workflow preanalysis {
 
@@ -100,24 +95,12 @@ workflow preanalysis {
     fasta_file
  
   main: 
-    input_files = format_input_files(input_vcfs, chr_format)
+    input_files = format_vcf_files(input_vcfs, chr_format)
     fasta_ref = format_reference_files(fasta_file)
+    vcf_files = normalize_files(input_files, fasta_ref)
 
   emit: 
-    input_files
+    vcf_files
     fasta_ref
 
-}
-
-workflow postanalysis {
-
-    // Post-analysis subworkflow
-
-  take:
-    results
-    annotation_script
-
-  main:
-    annotate_variants(results, annotation_script)
-    
 }

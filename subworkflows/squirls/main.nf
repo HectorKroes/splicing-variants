@@ -14,8 +14,6 @@ process predict_variant_effect {
     annotates all the variants for which there are available
     scores and then saves them to the designated output folder*/
 
-    tag "${input_vcf.baseName}"
-    label 'squirlsContainer'
     label 'inSeries'
 
     input:

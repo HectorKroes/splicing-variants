@@ -2,7 +2,7 @@
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    SpliceAI subworkflow
+    SpliceAI GPU subworkflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Implements the usage of SpliceAI v1.3.1 with the option 
     of using precalculated scores to cut processing time
@@ -19,8 +19,6 @@ process annotate_precalculated_scores {
   not annotated, that will be redirected to receive de novo
   predictions by SpliceAI) */
   
-  tag "${input_vcf.baseName}"
-  label 'spliceaiContainer'
   label 'inParallel'
 
   input:
@@ -54,9 +52,7 @@ process predict_de_novo_variants {
   novo predictions. The function also ensures that the fasta
   file has compatible chr formats with the files presented. */
   
-  tag "${basename}"
   stageInMode 'copy'
-  label 'spliceaiContainer'
   label 'inSeries'
   
   input:
@@ -76,8 +72,6 @@ process fuse_temporary_vcfs {
   /* Function that gets dnv and pcs vcf files and concatenates
   them to create a result file with all variants */
 
-  tag "${basename}"
-  label 'spliceaiContainer'
   label 'inParallel'
   
   input:
@@ -103,8 +97,6 @@ process no_pcv_adequation {
   by precalculated scores into a tuple compatible with 
   predict_de_novo_variants function input format */ 
 
-
-  label 'spliceaiContainer'
   label 'inParallel'
 
   input:
@@ -120,9 +112,9 @@ process no_pcv_adequation {
 
 }
 
-workflow spliceai {
+workflow spliceai_gpu {
 
-  /* SpliceAI subworkflow - pcv parameter check determines 
+  /* SpliceAI GPU subworkflow - pcv parameter check determines 
   whether to use precalculated scores or not */
 
   take:
@@ -135,23 +127,21 @@ workflow spliceai {
  
   main: 
 
-    if( params.pcv == 0 ) {
+    if ( params.pcv ) {
+
+      pcs_channel = annotate_precalculated_scores(input_files, indel_annotation, indel_annotation_index, snv_annotation, snv_annotation_index)
+
+      dnv_predictions = predict_de_novo_variants(pcs_channel.tbc_ch.combine(fasta_ref))
+
+      temporary_vcfs = (pcs_channel.pcs_ch).join(dnv_predictions)
+
+      spliceai_results = fuse_temporary_vcfs(temporary_vcfs)
+
+    } else {
 
       tbc_channel = no_pcv_adequation(input_files)
 
       spliceai_results = predict_de_novo_variants(tbc_channel.combine(fasta_ref))
-
-    }
-
-    else if( params.pcv == 1 ) {
-
-      pcs_channel = annotate_precalculated_scores(input_files, indel_annotation, indel_annotation_index, snv_annotation, snv_annotation_index)
-
-      predict_de_novo_variants(pcs_channel.tbc_ch.combine(fasta_ref))
-
-      temporary_vcfs = (pcs_channel.pcs_ch).join(predict_de_novo_variants.out)
-
-      spliceai_results = fuse_temporary_vcfs(temporary_vcfs)
     
     }
 
