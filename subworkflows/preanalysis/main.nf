@@ -19,8 +19,7 @@ process format_vcf_files {
     label 'inParallel'
 
     input:
-        path input_vcf
-        path chr_format
+        tuple path(input_vcf), path(chr_format)
 
     output:
         path("${input_vcf.SimpleName}.vcf.gz")
@@ -95,7 +94,7 @@ workflow preanalysis {
     fasta_file
  
   main: 
-    input_files = format_vcf_files(input_vcfs, chr_format)
+    input_files = format_vcf_files(input_vcfs.combine(chr_format))
     fasta_ref = format_reference_files(fasta_file)
     vcf_files = normalize_files(input_files, fasta_ref)
 

@@ -30,9 +30,9 @@ SQUIRLS's database can be downloaded from it's [documentation page](https://squi
 
 Illumina made available annotations for all possible substitutions, 1 base insertions, and 1-4 base deletions within genes for download at their [online platform](https://basespace.illumina.com/s/otSPW8hnhaZR). These annotations are free for academic and not-for-profit use; other use requires a commercial license from Illumina, Inc. To use them in our pipeline, you should execute it with the `--pcv` parameter and use the parameters `indels` and `snvs` to indicate the score file paths.
 
-### Input expressions
+### Glob expressions
 
-To input multiple files at once, expressions can be utilized as described in the [Nextflow documentation](https://www.nextflow.io/docs/latest/process.html#multiple-input-files). Expressions must be enclosed in quotes while individual file paths do not.
+To input multiple files at once, glob expressions can be utilized as described in the [Nextflow documentation](https://www.nextflow.io/docs/latest/process.html#multiple-input-files). Expressions must be enclosed in quotes while individual file paths do not.
 
 ### Custom gene annotation files
 

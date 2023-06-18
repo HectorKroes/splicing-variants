@@ -7,12 +7,6 @@ def find_start(lines):
 		else:
 			return i
 
-def header_formatter(header):
-	for i in range(len(header)):
-		if header[i] == '##FILTER=<ID=SQUIRLS,Description="Squirls considers the variant as pathogenic if the filter is present">\n':
-			header[i] = '##INFO=<ID=SplicePrediction,Number=A,Type=String,Description="Splicing pathogenicity prediction">\n'
-	return header
-
 def verify_annotation_presence(line):
 	squirls = line.find("SQUIRLS_SCORE=")
 	spliceai = line.find("SpliceAI=")
@@ -57,7 +51,7 @@ def annotate(variant_line, prediction):
 	columns = variant_line.split('\t')
 	columns[6] = '.'
 	columns[7] = columns[7].replace('\n', '')
-	columns[7] = f'{columns[7]};SplicePrediction={prediction}'
+	columns[7] = f'{columns[7]};SplicePrediction={prediction}\n'
 	return '\t'.join(columns)
 
 def filter_variants(variants, start, results, spliceai_cutoff, squirls_cutoff, file_name, mode):
@@ -83,6 +77,6 @@ if __name__ == "__main__":
     with open(file_path) as file:
     	lines = file.readlines()
     start = find_start(lines)
-    header = header_formatter(lines[:start])
+    header = lines[:start]
     variants = lines[start:]
     filter_variants(variants, start, header, spliceai_cutoff, squirls_cutoff, results_file, mode)

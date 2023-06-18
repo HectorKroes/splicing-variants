@@ -18,8 +18,7 @@ process annotate_variants {
     label 'inParallel'
 
     input:
-        each input_vcf
-        path vcf_annotation
+        tuple path(input_vcf), path(annotation_script)
 
     output:
         path "splice_**.vcf"
@@ -36,9 +35,9 @@ workflow postanalysis {
 
   take:
     vcf_files
-    python_file
+    annotation_script
 
   main:
-    annotate_variants(vcf_files, python_file)
+    annotate_variants(vcf_files.combine(annotation_script))
     
 }

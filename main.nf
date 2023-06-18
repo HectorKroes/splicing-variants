@@ -20,7 +20,7 @@ include { postanalysis } from './subworkflows/postanalysis'
 // Defining input parameters
 
 input_vcfs = Channel
-    .fromPath(params.i)
+    .fromPath(params.i, checkIfExists: true)
 
 indel_annotation = Channel
     .fromPath(params.indels)
@@ -39,6 +39,9 @@ fasta_file = Channel
 
 squirls_db = Channel
     .fromPath(params.sdb)
+
+annotation_script = Channel
+    .fromPath('./resources/usr/bin/vcf_annotation.py')
 
 chr_format = Channel
     .fromPath('./resources/usr/src/chr_dict.txt')

@@ -19,14 +19,11 @@ process annotate_precalculated_scores {
   not annotated, that will be redirected to receive de novo
   predictions by SpliceAI) */
   
+  stageInMode 'copy'
   label 'inParallel'
 
   input:
-    tuple path(input_vcf), path(index_file)
-    path indel_annotation
-    path indel_annotation_index
-    path snv_annotation
-    path snv_annotation_index
+    tuple path(input_vcf), path(index_file), path(indel_annotation), path(indel_annotation_index), path(snv_annotation), path(snv_annotation_index)
 
   output:
     tuple val("${input_vcf.baseName}"), path("pcs_${input_vcf.baseName}"), emit: pcs_ch
@@ -37,9 +34,9 @@ process annotate_precalculated_scores {
     bcftools annotate -c 'INFO' -a ${indel_annotation} ${input_vcf} -O z -o pcs1.vcf.gz
     bcftools index -f -t pcs1.vcf.gz
     bcftools annotate -c 'INFO' -a ${snv_annotation} pcs1.vcf.gz -O z -o pcs2.vcf.gz
-    zcat pcs2.vcf.gz | grep '^#' > pcs_${input_vcf.baseName}
-    zcat pcs2.vcf.gz | grep SpliceAI= >> pcs_${input_vcf.baseName}
-    zcat pcs2.vcf.gz | grep -v SpliceAI= > tbc_${input_vcf.baseName}
+    zgrep '^#' pcs2.vcf.gz > pcs_${input_vcf.baseName}
+    zgrep 'SpliceAI=' pcs2.vcf.gz >> pcs_${input_vcf.baseName}
+    zgrep -v 'SpliceAI=' pcs2.vcf.gz > tbc_${input_vcf.baseName}
     """
 }
 
@@ -52,7 +49,6 @@ process predict_de_novo_variants {
   novo predictions. The function also ensures that the fasta
   file has compatible chr formats with the files presented. */
   
-  stageInMode 'copy'
   label 'inSeries'
   
   input:
@@ -129,7 +125,7 @@ workflow spliceai_gpu {
 
     if ( params.pcv ) {
 
-      pcs_channel = annotate_precalculated_scores(input_files, indel_annotation, indel_annotation_index, snv_annotation, snv_annotation_index)
+      pcs_channel = annotate_precalculated_scores(input_files.combine(indel_annotation).combine(indel_annotation_index).combine(snv_annotation).combine(snv_annotation_index))
 
       dnv_predictions = predict_de_novo_variants(pcs_channel.tbc_ch.combine(fasta_ref))
 
