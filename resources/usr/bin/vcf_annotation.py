@@ -57,7 +57,10 @@ def annotate(variant_line, prediction):
 	columns = variant_line.split('\t')
 	columns[6] = '.'
 	columns[7] = columns[7].replace('\n', '')
-	columns[7] = f'{columns[7]};SplicePrediction={prediction}'
+	if len(columns) == 8:
+		columns[7] = f'{columns[7]};SplicePrediction={prediction}\n'
+	else:
+		columns[7] = f'{columns[7]};SplicePrediction={prediction}'
 	return '\t'.join(columns)
 
 def filter_variants(variants, start, results, spliceai_cutoff, squirls_cutoff, file_name, mode):
