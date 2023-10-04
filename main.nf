@@ -40,6 +40,9 @@ fasta_file = Channel
 squirls_db = Channel
     .fromPath(params.sdb)
 
+slivar_annotation = Channel
+    .fromPath(params.af)
+
 annotation_script = Channel
     .fromPath('./resources/usr/bin/vcf_annotation.py')
 
@@ -53,15 +56,15 @@ workflow {
 
     // Defining main workflow
 
-    formatted_data = preanalysis(input_vcfs, chr_format, fasta_file)
+    input_files = preanalysis(input_vcfs, chr_format, fasta_file, slivar_annotation)
 
     if ( params.gpu ) {
 
-        spliceai_results = spliceai_gpu(formatted_data.vcf_files, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, formatted_data.fasta_ref)
+        spliceai_results = spliceai_gpu(input_files.formatted_vcfs, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, input_files.fasta_ref)
 
     } else {
 
-        spliceai_results = spliceai_cpu(formatted_data.vcf_files, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, formatted_data.fasta_ref)
+        spliceai_results = spliceai_cpu(input_files.formatted_vcfs, snv_annotation, indel_annotation, snv_annotation_index, indel_annotation_index, input_files.fasta_ref)
 
     }
 

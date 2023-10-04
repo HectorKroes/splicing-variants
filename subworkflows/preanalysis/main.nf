@@ -50,15 +50,18 @@ process format_reference_files {
         path fasta_file
 
     output:
-        path("${fasta_file.SimpleName}.fa")
+        path "${fasta_file.SimpleName}.fa", emit: fa
+        path "${fasta_file.SimpleName}.fa.fai", emit: fai
 
     script:
     """
     if file -b --mime-type ${fasta_file} | grep -q gzip; then
-        zcat ${fasta_file} | sed 's/>chr/>/g' > ${fasta_file.baseName}
+        gunzip -c ${fasta_file.SimpleName}.fa.gz > ${fasta_file.SimpleName}.fa
     else
-        sed -i 's/>chr/>/g' ${fasta_file} > ${fasta_file}
+        true
     fi
+    sed -i 's/>chr/>/g' ${fasta_file.SimpleName}.fa > ${fasta_file.SimpleName}.fa
+    samtools faidx ${fasta_file.SimpleName}.fa
     """
 
 }
@@ -83,6 +86,24 @@ process normalize_files {
 
 }
 
+process annotate_allele_frequency {
+
+    /* Uses Slivar to annotate Gnomad allele
+    frequencies */
+    
+    label 'inParallel'
+
+    input:
+        tuple path(input_vcf), path(input_tbi), path(gnomad_annotation), path(fasta_bgzip), path(fasta_fai)
+
+    output:
+        tuple path("${input_vcf.SimpleName}.vcf.gz"), path("${input_tbi.SimpleName}.vcf.gz.tbi")
+
+    script:
+    """
+    slivar expr -g ${gnomad_annotation} --vcf ${input_vcf} > ${input_vcf}
+    """
+}
 
 workflow preanalysis {
 
@@ -92,14 +113,26 @@ workflow preanalysis {
     input_vcfs
     chr_format
     fasta_file
+    gnomad_annotation
  
   main: 
     input_files = format_vcf_files(input_vcfs.combine(chr_format))
-    fasta_ref = format_reference_files(fasta_file)
-    vcf_files = normalize_files(input_files, fasta_ref)
+    fasta_refs = format_reference_files(fasta_file)
+    fasta_ref = fasta_refs.fa
+    normalized_files = normalize_files(input_files, fasta_refs.fa)
+
+    if ( params.faf ) {
+
+        formatted_vcfs = annotate_allele_frequency(normalized_files.combine(gnomad_annotation).combine(fasta_refs.fa).combine(fasta_refs.fai))
+
+    } else {
+
+        formatted_vcfs = normalized_files
+
+    }
 
   emit: 
-    vcf_files
+    formatted_vcfs
     fasta_ref
 
 }
