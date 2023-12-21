@@ -23,7 +23,7 @@ process annotate_precalculated_scores {
   label 'inParallel'
 
   input:
-    tuple path(input_vcf), path(index_file), path(indel_annotation), path(indel_annotation_index), path(snv_annotation), path(snv_annotation_index)
+    tuple path(input_vcf), path(indel_annotation), path(indel_annotation_index), path(snv_annotation), path(snv_annotation_index)
 
   output:
     tuple val("${input_vcf.baseName}"), path("pcs_${input_vcf.baseName}"), emit: pcs_ch
@@ -96,7 +96,7 @@ process no_pcv_adequation {
   label 'inParallel'
 
   input:
-    tuple path(input_vcf), path(index_file)
+    path(input_vcf)
 
   output:
     tuple val("${input_vcf.baseName}"), path("tbc_${input_vcf.baseName}")

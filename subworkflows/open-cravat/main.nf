@@ -2,13 +2,13 @@
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    SQUIRLS subworkflow
+    OpenCRAVAT subworkflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Implements the usage of SQUIRLS v2.0.0 as a VCF annotator
+    Implements the usage of OpenCRAVAT v2.4.2 as a VCF annotator
 ----------------------------------------------------------------------------------------
 */
 
-process predict_variant_effect {
+process open_cravat_annotations {
     
     /* Function receives input vcf, and necessary squirls files,
     annotates all the variants for which there are available
@@ -17,31 +17,30 @@ process predict_variant_effect {
     label 'inSeries'
 
     input:
-        tuple val(vcf_name), path(input_vcf), path(squirls_db)
+        path input_vcf
 
     output:
-        path "${input_vcf.baseName}.vcf"
+        path "output/*.vcf"
 
     script:
         """
-        java -jar /squirls-cli-2.0.0.jar annotate-vcf --threads ${params.t} -f vcf -d ${squirls_db} ${input_vcf} .
-        mv squirls.vcf ${input_vcf.SimpleName}.vcf
+        oc module install -y vest revel provean mutpred1 mutationtaster dbscsnv cadd cadd_exome aloft
+        oc run ${input_vcf} -l hg38 -a vest revel provean mutpred1 mutationtaster dbscsnv cadd cadd_exome aloft  -d output/ -t vcf
         """
 
 }
 
-workflow squirls {
+workflow open_cravat {
 
   // SQUIRLS subworkflow
 
   take:
-    spliceai_results
-    squirls_db
+    squirls_results
  
   main: 
-    squirls_results = predict_variant_effect(spliceai_results.combine(squirls_db))
+    open_cravat_results = open_cravat_annotations(squirls_results)
 
   emit: 
-    squirls_results
+    open_cravat_results
 
 }

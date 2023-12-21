@@ -15,6 +15,7 @@ include { preanalysis } from './subworkflows/preanalysis'
 include { spliceai_cpu } from './subworkflows/spliceai-cpu'
 include { spliceai_gpu } from './subworkflows/spliceai-gpu'
 include { squirls } from './subworkflows/squirls'
+include { open_cravat } from './subworkflows/open-cravat'
 include { postanalysis } from './subworkflows/postanalysis'
 
 // Defining input parameters
@@ -43,6 +44,12 @@ squirls_db = Channel
 slivar_annotation = Channel
     .fromPath(params.af)
 
+normalization_script = Channel
+    .fromPath('./resources/usr/bin/vcf_normalization.py')
+
+freq_filter_script = Channel
+    .fromPath('./resources/usr/bin/vcf_freq_filter.py')
+
 annotation_script = Channel
     .fromPath('./resources/usr/bin/vcf_annotation.py')
 
@@ -56,7 +63,7 @@ workflow {
 
     // Defining main workflow
 
-    input_files = preanalysis(input_vcfs, chr_format, fasta_file, slivar_annotation)
+    input_files = preanalysis(input_vcfs, chr_format, fasta_file, slivar_annotation, normalization_script, freq_filter_script)
 
     if ( params.gpu ) {
 
@@ -70,6 +77,8 @@ workflow {
 
     squirls_results = squirls(spliceai_results, squirls_db)
 
-    postanalysis(squirls_results, annotation_script)
+    open_cravat_results = open_cravat(squirls_results)
+
+    postanalysis(open_cravat_results, annotation_script)
 
 }

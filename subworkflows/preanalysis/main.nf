@@ -43,7 +43,6 @@ process format_reference_files {
     /* Function to standardize reference files and provide
     a single copy of them to be used whenever necessary */ 
     
-    stageInMode 'copy'
     label 'inParallel'
 
     input:
@@ -55,12 +54,7 @@ process format_reference_files {
 
     script:
     """
-    if file -b --mime-type ${fasta_file} | grep -q gzip; then
-        gunzip -c ${fasta_file.SimpleName}.fa.gz > ${fasta_file.SimpleName}.fa
-    else
-        true
-    fi
-    sed -i 's/>chr/>/g' ${fasta_file.SimpleName}.fa > ${fasta_file.SimpleName}.fa
+    zcat ${fasta_file} | sed 's/>chr/>/g' > ${fasta_file.SimpleName}.fa
     samtools faidx ${fasta_file.SimpleName}.fa
     """
 
@@ -69,39 +63,44 @@ process format_reference_files {
 process normalize_files {
 
     /* Function to normalize and index vcfs using bcftools */ 
-    
+
     input:
         each vcf_file
         path fasta_file
+        path normalization_script
 
     output:
-        tuple path("${vcf_file.SimpleName}.vcf.gz"), path("${vcf_file.SimpleName}.vcf.gz.tbi")
+        path "${vcf_file.SimpleName}.vcf.gz"
 
     script:
     """
     bcftools norm -cs -f ${fasta_file} ${vcf_file} -Oz -o normalized_vcf.vcf.gz
-    mv normalized_vcf.vcf.gz ${vcf_file.SimpleName}.vcf.gz
-    bcftools index -f -t ${vcf_file.SimpleName}.vcf.gz
+    gunzip normalized_vcf.vcf.gz 
+    python3 ${normalization_script} normalized_vcf.vcf
+    bcftools view normalized_vcf.vcf -Oz -o ${vcf_file.SimpleName}.vcf.gz
     """
 
 }
 
-process annotate_allele_frequency {
+process slivar_annotation {
 
     /* Uses Slivar to annotate Gnomad allele
     frequencies */
     
+    stageInMode 'copy'
     label 'inParallel'
 
     input:
-        tuple path(input_vcf), path(input_tbi), path(gnomad_annotation), path(fasta_bgzip), path(fasta_fai)
+        tuple path(input_vcf), path(gnomad_annotation), path(fasta_bgzip), path(freq_filter_script)
 
     output:
-        tuple path("${input_vcf.SimpleName}.vcf.gz"), path("${input_tbi.SimpleName}.vcf.gz.tbi")
-
+        path "${input_vcf.SimpleName}.vcf.gz"
     script:
     """
-    slivar expr -g ${gnomad_annotation} --vcf ${input_vcf} > ${input_vcf}
+    gunzip ${input_vcf}
+    slivar expr -g ${gnomad_annotation} --vcf ${input_vcf.SimpleName}.vcf > slivar_vcf.vcf
+    python3 vcf_freq_filter.py slivar_vcf.vcf ${params.faf} ${params.af_cutoff}
+    bcftools view slivar_vcf.vcf -Oz -o ${input_vcf.SimpleName}.vcf.gz
     """
 }
 
@@ -114,16 +113,18 @@ workflow preanalysis {
     chr_format
     fasta_file
     gnomad_annotation
+    normalization_script
+    freq_filter_script
  
   main: 
     input_files = format_vcf_files(input_vcfs.combine(chr_format))
     fasta_refs = format_reference_files(fasta_file)
     fasta_ref = fasta_refs.fa
-    normalized_files = normalize_files(input_files, fasta_refs.fa)
+    normalized_files = normalize_files(input_files, fasta_ref, normalization_script)
 
     if ( params.faf ) {
 
-        formatted_vcfs = annotate_allele_frequency(normalized_files.combine(gnomad_annotation).combine(fasta_refs.fa).combine(fasta_refs.fai))
+        formatted_vcfs = slivar_annotation(normalized_files.combine(gnomad_annotation).combine(fasta_ref).combine(freq_filter_script))
 
     } else {
 
